@@ -6,7 +6,9 @@
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
+
 <header>?? Global Random Video Chat</header>
+
 <div id="login">
   <div id="loginBox">
     <h3>Join Chat</h3>
@@ -27,6 +29,7 @@
     <button onclick="join()">Enter Chat</button>
   </div>
 </div>
+
 <div id="app">
   <div id="topbar">
     <div id="userInfo"></div>
@@ -35,6 +38,7 @@
       <button onclick="nextUser()">? Next</button>
     </div>
   </div>
+
   <div id="main">
     <div id="videos">
       <div>
@@ -49,6 +53,7 @@
         <video id="remoteVideo" autoplay playsinline></video>
       </div>
     </div>
+
     <div id="chat">
       <div id="messages"></div>
       <div id="chatInput">
@@ -59,6 +64,7 @@
     </div>
   </div>
 </div>
+
 <script src="/socket.io/socket.io.js"></script>
 <script>
 const socket = io();
@@ -84,15 +90,16 @@ navigator.mediaDevices.getUserMedia({video:true,audio:true}).then(stream=>{
 });
 
 function createPeer(){
+  if(peer) return;
   peer = new RTCPeerConnection({iceServers:[{urls:"stun:stun.l.google.com:19302"}]});
-  localStream.getTracks().forEach(track=>peer.addTrack(track,localStream));
-  peer.ontrack = e=> remoteVideo.srcObject = e.streams[0];
-  peer.onicecandidate = e=>{ if(e.candidate) socket.emit("ice",e.candidate); };
+  localStream.getTracks().forEach(track => peer.addTrack(track, localStream));
+  peer.ontrack = e => { remoteVideo.srcObject = e.streams[0]; };
+  peer.onicecandidate = e => { if(e.candidate) socket.emit("ice", e.candidate); };
 }
 
 function findUser(){ socket.emit("find"); messages.innerHTML += "<p>Searching for a partner...</p>"; }
 function nextUser(){ if(peer){ peer.close(); peer=null; } remoteVideo.srcObject = null; messages.innerHTML = ""; socket.emit("next"); }
-function sendMessage(){ let text = msg.value; if(!text) return; messages.innerHTML += `<p><b>You:</b> ${text}</p>`; socket.emit("message",text); msg.value=""; }
+function sendMessage(){ let text = msg.value; if(!text) return; messages.innerHTML += "<p><b>You:</b> "+text+"</p>"; socket.emit("message",text); msg.value=""; }
 function sendImage(){ const file = img.files[0]; if(!file) return; const reader = new FileReader(); reader.onload=function(){ messages.innerHTML+=`<p><b>You:</b><br><img src='${reader.result}'></p>`; socket.emit("image",reader.result); }; reader.readAsDataURL(file); }
 
 socket.on("matched", async ()=>{ createPeer(); const offer = await peer.createOffer(); await peer.setLocalDescription(offer); socket.emit("offer",offer); });
@@ -107,4 +114,6 @@ socket.on("status", txt=>{ messages.innerHTML+=`<p>${txt}</p>`; });
 function toggleCamera(){ if(!localStream) return; const videoTrack = localStream.getVideoTracks()[0]; videoTrack.enabled = !cameraOn; cameraOn = !cameraOn; }
 function toggleMic(){ if(!localStream) return; const audioTrack = localStream.getAudioTracks()[0]; audioTrack.enabled = !micOn; micOn = !micOn; }
 </script>
+
+</body>
 </html>
