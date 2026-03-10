@@ -91,7 +91,12 @@ navigator.mediaDevices.getUserMedia({video:true,audio:true}).then(stream=>{
 
 function createPeer(){
   if(peer) return;
-  peer = new RTCPeerConnection({iceServers:[{urls:"stun:stun.l.google.com:19302"}]});
+  peer = new RTCPeerConnection({
+  iceServers:[
+    { urls: "stun:stun.l.google.com:19302" },
+    { urls: "turn:numb.viagenie.ca", username: "demo@demo.com", credential: "muazkh" }
+  ]
+});
   localStream.getTracks().forEach(track => peer.addTrack(track, localStream));
   peer.ontrack = e => { remoteVideo.srcObject = e.streams[0]; };
   peer.onicecandidate = e => { if(e.candidate) socket.emit("ice", e.candidate); };
